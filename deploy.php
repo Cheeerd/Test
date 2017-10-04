@@ -25,8 +25,9 @@ class Git_Deploy
             $this->_output($result);
         }
 
-        $result = shell_exec('ls');
-        $this->_output($result);
+        exec('ls', $result, $return_var);
+        $this->_output('ls result: ' . print_r($result, true));
+        $this->_output('ls return_var: ' . $return_var);
         return;
 
         $result = shell_exec('git reset --hard HEAD && git pull');
