@@ -59,6 +59,7 @@ class Git_Deploy
 $settings = array(
     'branch' => 'master',
     'dir' => '',
+    'log_request' => false,
 );
 
 $deploy = new Git_Deploy();
