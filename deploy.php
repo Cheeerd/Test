@@ -19,6 +19,11 @@ class Git_Deploy
         }
         $data = $this->_getParsedData();
 
+        if (empty($data) || empty($data['ref'])) {
+            $this->_output('Wrong input data.');
+            return;
+        }
+
         if ($data['ref'] != 'refs/heads/' . $this->_settings['branch']) {
             $this->_output('Skip. Branch not match. Push was to ref "' . $data['ref'] . '". Need branch "' . $this->_settings['branch'] . '".');
             return;
