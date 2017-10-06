@@ -30,12 +30,44 @@ class Git_Deploy
         }
 
         if ($this->_settings['dir']) {
-            $result = shell_exec('cd ' . $this->_settings['dir']);
-            $this->_output($result);
+            $result = $this->_shell_exec('cd ' . $this->_settings['dir']);
+            if ($result) {
+                $this->_output('Can\'t change directory.');
+                return;
+            }
         }
 
-        $result = shell_exec('git reset --hard HEAD && git pull');
-        $this->_output($result);
+        $this->_shell_exec('git reset --hard HEAD');
+
+        if (!$this->_checkout($this->_settings['branch'])) {
+            $this->_output('Can\'t checkout to branch \'' . $this->_settings['branch'] . '\'');
+        }
+
+        $this->_shell_exec('git pull');
+    }
+
+    protected function _checkout($branch)
+    {
+        $result = $this->_shell_exec('git branch');
+
+        if (!preg_match('/\* ' . $branch . '/', $result)) {
+            $result = $this->_shell_exec('git checkout ' . $branch);
+            if (!preg_match("/Switched to .*branch '$branch'/", $result)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function _shell_exec($command, $output = true)
+    {
+        $this->_output($command);
+        $result = shell_exec($command);
+        if ($output) {
+            $this->_output($result);
+        }
+        return $result;
     }
 
     protected function _validateDisabledFunctions()
