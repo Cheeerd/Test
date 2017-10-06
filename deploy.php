@@ -13,6 +13,10 @@ class Git_Deploy
 
     public function run()
     {
+        if (!$this->_validateDisabledFunctions()) {
+            $this->_output('shell_exec() has been disabled for security reasons');
+            return;
+        }
         $data = $this->_getParsedData();
 
         if ($data['ref'] != 'refs/heads/' . $this->_settings['branch']) {
@@ -32,6 +36,17 @@ class Git_Deploy
 
         $result = shell_exec('git reset --hard HEAD && git pull');
         $this->_output($result);
+    }
+
+    protected function _validateDisabledFunctions()
+    {
+        $functions = ini_get('disable_functions');
+        $functions = explode(',', $functions);
+        foreach ($functions as $key => $function) {
+            if ($function == 'shell_exec') {
+                return false;
+            }
+        }
     }
 
     protected function _getParsedData()
