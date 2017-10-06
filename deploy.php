@@ -47,6 +47,7 @@ class Git_Deploy
                 return false;
             }
         }
+        return true;
     }
 
     protected function _getParsedData()
