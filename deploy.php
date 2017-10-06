@@ -41,6 +41,7 @@ class Git_Deploy
 
         if (!$this->_checkout($this->_settings['branch'])) {
             $this->_output('Can\'t checkout to branch \'' . $this->_settings['branch'] . '\'');
+            return;
         }
 
         $this->_shell_exec('git pull');
@@ -48,16 +49,21 @@ class Git_Deploy
 
     protected function _checkout($branch)
     {
-        $result = $this->_shell_exec('git branch');
+        $i = 0;
+        do {
+            $result = $this->_shell_exec('git branch');
 
-        if (!preg_match('/\* ' . $branch . '/', $result)) {
-            $result = $this->_shell_exec('git checkout ' . $branch);
-            if (!preg_match("/Switched to .*branch '$branch'/", $result)) {
-                return false;
+            if (!preg_match('/\* ' . $branch . '/', $result)) {
+                if ($i > 0) {
+                    return false;
+                }
+                $this->_shell_exec('git checkout ' . $branch);
+            } else {
+                return true;
             }
-        }
+        } while ($i++ < 1);
 
-        return true;
+        return false;
     }
 
     protected function _shell_exec($command, $output = true)
