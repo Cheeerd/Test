@@ -1,5 +1,13 @@
 <?php
 
+$settings = array(
+    'branch' => 'master',
+    'dir' => '',
+    'log_request' => false,
+    'log' => true,
+    'ssh_key' => 'qwe_rsa'
+);
+
 class Git_Deploy
 {
     protected $_settings = array(
@@ -37,33 +45,44 @@ class Git_Deploy
             }
         }
 
-        $this->_shell_exec('git reset --hard HEAD');
+        $this->_gitExec('reset --hard HEAD');
 
         if (!$this->_checkout($this->_settings['branch'])) {
             $this->_output('Can\'t checkout to branch \'' . $this->_settings['branch'] . '\'');
             return;
         }
 
-        $this->_shell_exec('git pull');
+        $this->_gitExec('pull');
     }
 
     protected function _checkout($branch)
     {
         $i = 0;
         do {
-            $result = $this->_shell_exec('git branch');
+            $result = $this->_gitExec('branch');
 
             if (!preg_match('/\* ' . $branch . '/', $result)) {
                 if ($i > 0) {
                     return false;
                 }
-                $this->_shell_exec('git checkout ' . $branch);
+                $this->_gitExec('checkout ' . $branch);
             } else {
                 return true;
             }
         } while ($i++ < 1);
 
         return false;
+    }
+
+    protected function _gitExec($command, $output = true)
+    {
+        if ($this->_settings['ssh_key']) {
+            $command = "ssh-agent bash -c 'ssh-add \"{$this->_settings['ssh_key']}\"; git $command'";
+        } else {
+            $command = 'git ' . $command;
+        }
+
+        return $this->_shell_exec($command, $output);
     }
 
     protected function _shell_exec($command, $output = true)
@@ -102,7 +121,9 @@ class Git_Deploy
     protected function _output($message)
     {
         echo $message . PHP_EOL;
-        $this->_log($message);
+        if ($this->_settings['log']) {
+            $this->_log($message);
+        }
     }
 
     protected function _log($message)
@@ -111,11 +132,5 @@ class Git_Deploy
     }
 }
 
-$settings = array(
-    'branch' => 'master',
-    'dir' => '',
-    'log_request' => false,
-);
-
-$deploy = new Git_Deploy();
+$deploy = new Git_Deploy($settings);
 $deploy->run();
